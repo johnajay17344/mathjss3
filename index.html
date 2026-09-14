@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Sweet Hope School - JSS3 Maths Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sun:#FFC93C;
+    --sky:#4EA5D9;
+    --bubblegum:#FF6F91;
+    --grass:#3FAE79;
+    --tomato:#FF5A5F;
+    --ink:#1E2A4A;
+    --cream:#FFFDF6;
+    --lilac:#8C6FE0;
+    --card-shadow: 0 10px 0 rgba(30,42,74,0.08), 0 16px 30px rgba(30,42,74,0.12);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Nunito',sans-serif;
+    color:var(--ink);
+    min-height:100vh;
+    background: linear-gradient(160deg, #FFF4D6 0%, #DCEFFB 55%, #FFE3EC 100%);
+    overflow-x:hidden;
+    position:relative;
+  }
+  .blob{
+    position:absolute;
+    border-radius:50%;
+    opacity:0.35;
+    filter:blur(2px);
+    z-index:0;
+  }
+  h1,h2,h3,.logo,.big-num{ font-family:'Baloo 2', sans-serif; }
+
+  /* ---------- Layout shells ---------- */
+  .screen{
+    position:relative;
+    z-index:1;
+    min-height:100vh;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:24px 16px;
+  }
+  .screen.active{display:flex;}
+
+  .card{
+    background:var(--cream);
+    border-radius:28px;
+    box-shadow:var(--card-shadow);
+    width:100%;
+    max-width:480px;
+    padding:32px 26px;
+    position:relative;
+  }
+
+  /* ---------- Welcome screen ---------- */
+  .welcome-card{ text-align:center; }
+  .school-badge{
+    width:84px;height:84px;border-radius:24px;
+    background:linear-gradient(135deg,var(--sky),var(--lilac));
+    display:flex;align-items:center;justify-content:center;
+    font-size:42px; margin:0 auto 14px auto;
+    box-shadow:0 8px 0 rgba(30,42,74,0.12);
+    transform:rotate(-4deg);
+  }
+  .school-name{
+    font-size:clamp(26px,7vw,34px);
+    font-weight:800;
+    color:var(--ink);
+    margin:0 0 4px 0;
+    line-height:1.1;
+  }
+  .school-name span{ color:var(--bubblegum); }
+  .tagline{
+    font-weight:700;
+    color:var(--sky);
+    margin:0 0 22px 0;
+    font-size:15px;
+    letter-spacing:0.2px;
+  }
+  .week-pill{
+    display:inline-block;
+    background:var(--sun);
+    color:var(--ink);
+    font-weight:800;
+    padding:6px 16px;
+    border-radius:999px;
+    font-size:13px;
+    margin-bottom:20px;
+  }
+  .field-label{
+    display:block;
+    text-align:left;
+    font-weight:800;
+    margin:0 0 8px 2px;
+    color:var(--ink);
+    font-size:15px;
+  }
+  input[type="text"]{
+    width:100%;
+    padding:14px 16px;
+    font-size:17px;
+    font-family:'Nunito',sans-serif;
+    font-weight:700;
+    border:3px solid #E4DCC8;
+    border-radius:16px;
+    outline:none;
+    background:#fff;
+    color:var(--ink);
+    transition:border-color .15s ease;
+  }
+  input[type="text"]:focus{ border-color:var(--sky); }
+  .hint{ font-size:13px; color:#7c8299; margin:8px 2px 0 2px; text-align:left; min-height:18px; font-weight:700;}
+  .hint.error{ color:var(--tomato); }
+
+  .btn{
+    border:none;
+    cursor:pointer;
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    border-radius:16px;
+    transition:transform .08s ease, box-shadow .08s ease, opacity .15s ease;
+  }
+  .btn:active{ transform:translateY(3px); }
+  .btn-primary{
+    width:100%;
+    margin-top:22px;
+    padding:16px;
+    font-size:19px;
+    color:#fff;
+    background:linear-gradient(135deg,var(--bubblegum),#FF8FA8);
+    box-shadow:0 6px 0 #D14F6B;
+  }
+  .btn-primary:disabled{
+    opacity:0.45;
+    cursor:not-allowed;
+    box-shadow:0 6px 0 #b7bcc9;
+    background:#9aa0b3;
+  }
+  .btn-secondary{
+    padding:14px 18px;
+    font-size:16px;
+    color:var(--ink);
+    background:#fff;
+    border:3px solid #E4DCC8;
+    box-shadow:0 5px 0 #E4DCC8;
+  }
+
+  /* ---------- Quiz screen ---------- */
+  .quiz-wrap{ width:100%; max-width:560px; }
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:14px; flex-wrap:wrap; gap:8px;
+  }
+  .brand-mini{
+    display:flex; align-items:center; gap:8px;
+    font-weight:800; font-size:15px; color:var(--ink);
+  }
+  .brand-mini .dot{ font-size:22px; }
+  .score-badge{
+    background:#fff;
+    border-radius:999px;
+    padding:8px 14px;
+    font-weight:800;
+    font-size:14px;
+    box-shadow:0 4px 0 rgba(30,42,74,0.08);
+    display:flex; align-items:center; gap:6px;
+    white-space:nowrap;
+  }
+  .student-chip{
+    font-size:13px; font-weight:800; color:#5b6178;
+    background:#fff; border-radius:999px; padding:6px 12px;
+    box-shadow:0 3px 0 rgba(30,42,74,0.06);
+  }
+
+  .progress-track{
+    width:100%; height:14px; border-radius:999px;
+    background:#E9E4D2; overflow:hidden; margin-bottom:18px;
+    box-shadow:inset 0 2px 4px rgba(0,0,0,0.06);
+  }
+  .progress-fill{
+    height:100%; border-radius:999px;
+    background:linear-gradient(90deg,var(--sun),var(--bubblegum));
+    width:2%;
+    transition:width .35s ease;
+  }
+
+  .q-card{
+    background:var(--cream);
+    border-radius:26px;
+    box-shadow:var(--card-shadow);
+    padding:26px 22px;
+  }
+  .q-meta{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:10px;
+  }
+  .q-number{
+    font-family:'Baloo 2',sans-serif; font-weight:700;
+    color:var(--sky); font-size:14px;
+  }
+  .topic-tag{
+    font-size:11px; font-weight:800; color:#fff;
+    background:var(--lilac); padding:4px 10px; border-radius:999px;
+    letter-spacing:0.3px;
+  }
+  .q-text{
+    font-size:19px; font-weight:800; line-height:1.4;
+    margin:4px 0 18px 0; color:var(--ink);
+  }
+
+  .options{ display:flex; flex-direction:column; gap:12px; }
+  .opt{
+    display:flex; align-items:center; gap:12px;
+    text-align:left;
+    padding:14px 16px;
+    border-radius:16px;
+    border:3px solid #E4DCC8;
+    background:#fff;
+    font-family:'Nunito',sans-serif;
+    font-weight:700;
+    font-size:15.5px;
+    color:var(--ink);
+    cursor:pointer;
+    transition:border-color .12s ease, background .12s ease, transform .08s ease;
+  }
+  .opt:hover:not(:disabled){ border-color:var(--sky); transform:translateY(-1px); }
+  .opt:disabled{ cursor:default; }
+  .opt-letter{
+    flex:0 0 auto;
+    width:30px;height:30px;border-radius:10px;
+    background:#F0EBDD; color:var(--ink);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:14px;
+  }
+  .opt.correct{
+    background:#E7F7EE; border-color:var(--grass);
+  }
+  .opt.correct .opt-letter{ background:var(--grass); color:#fff; }
+  .opt.wrong{
+    background:#FFEDEC; border-color:var(--tomato);
+  }
+  .opt.wrong .opt-letter{ background:var(--tomato); color:#fff; }
+
+  .feedback{
+    margin-top:16px;
+    border-radius:16px;
+    padding:14px 16px;
+    font-size:14.5px;
+    font-weight:700;
+    line-height:1.5;
+    display:none;
+  }
+  .feedback.show{ display:block; animation:pop .25s ease; }
+  .feedback.good{ background:#E7F7EE; color:#1E6B45; }
+  .feedback.bad{ background:#FFEDEC; color:#9C2C2F; }
+  .feedback .fb-title{ display:block; margin-bottom:4px; font-family:'Baloo 2',sans-serif; font-size:15px; }
+
+  @keyframes pop{ from{ transform:scale(0.96); opacity:0;} to{ transform:scale(1); opacity:1; } }
+
+  .nav-row{
+    display:flex; gap:12px; margin-top:18px;
+  }
+  .nav-row .btn{ flex:1; padding:14px; font-size:16px; }
+  .btn-nav-prev{
+    background:#fff; color:var(--ink); border:3px solid #E4DCC8;
+    box-shadow:0 5px 0 #E4DCC8;
+  }
+  .btn-nav-next{
+    background:linear-gradient(135deg,var(--sky),#6FC0E8);
+    color:#fff; box-shadow:0 5px 0 #2E7FA8;
+  }
+  .btn-nav-next.finish{
+    background:linear-gradient(135deg,var(--grass),#59C990);
+    box-shadow:0 5px 0 #297C51;
+  }
+  .btn:disabled{ opacity:0.4; cursor:not-allowed; }
+
+  /* ---------- Results screen ---------- */
+  .result-card{ text-align:center; }
+  .trophy{ font-size:56px; margin-bottom:6px; }
+  .result-name{ font-size:20px; font-weight:800; margin:0 0 2px 0; }
+  .result-sub{ font-size:14px; font-weight:700; color:#7c8299; margin:0 0 18px 0; }
+  .score-circle{
+    width:150px; height:150px; border-radius:50%;
+    margin:0 auto 18px auto;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:conic-gradient(var(--grass) calc(var(--pct,0)*1%), #EFEAD8 0);
+    position:relative;
+  }
+  .score-circle::before{
+    content:"";
+    position:absolute; width:118px; height:118px; border-radius:50%;
+    background:var(--cream);
+  }
+  .score-circle .pct{ position:relative; font-size:30px; font-weight:800; font-family:'Baloo 2',sans-serif; }
+  .score-circle .frac{ position:relative; font-size:13px; font-weight:800; color:#7c8299; }
+  .result-message{
+    font-size:16px; font-weight:800; padding:12px 16px; border-radius:16px;
+    margin-bottom:20px;
+  }
+  .msg-great{ background:#E7F7EE; color:#1E6B45; }
+  .msg-good{ background:#FFF4D6; color:#8A6300; }
+  .msg-tryagain{ background:#FFEDEC; color:#9C2C2F; }
+  .result-actions{ display:flex; flex-direction:column; gap:12px; }
+  .btn-email{
+    background:linear-gradient(135deg,var(--bubblegum),#FF8FA8);
+    color:#fff; box-shadow:0 6px 0 #D14F6B; padding:16px; font-size:16px;
+  }
+  .btn-restart{
+    background:#fff; color:var(--ink); border:3px solid #E4DCC8; box-shadow:0 5px 0 #E4DCC8; padding:14px; font-size:15px;
+  }
+
+  .confetti{
+    position:fixed; top:-20px; z-index:5; border-radius:2px; pointer-events:none;
+    animation:fall linear forwards;
+  }
+  @keyframes fall{
+    to{ transform:translateY(110vh) rotate(400deg); opacity:0.9; }
+  }
+
+  @media (max-width:420px){
+    .card, .q-card{ padding:22px 16px; border-radius:22px; }
+    .q-text{ font-size:17.5px; }
+  }
+
+  footer.credit{
+    text-align:center; font-size:12px; color:#8a90a6; font-weight:700;
+    margin-top:16px;
+  }
+</style>
+</head>
+<body>
+
+<!-- decorative background blobs -->
+<div class="blob" style="width:220px;height:220px;background:var(--sky);top:-60px;left:-60px;"></div>
+<div class="blob" style="width:180px;height:180px;background:var(--sun);bottom:-40px;right:-40px;"></div>
+<div class="blob" style="width:140px;height:140px;background:var(--bubblegum);top:40%;right:-70px;"></div>
+
+<!-- ===================== SCREEN 1: WELCOME / NAME ENTRY ===================== -->
+<section id="screen-welcome" class="screen active">
+  <div class="card welcome-card">
+    <div class="school-badge">🎓</div>
+    <h1 class="school-name">Sweet Hope <span>School</span></h1>
+    <p class="tagline">JSS3 Mathematics Practice Zone</p>
+    <div class="week-pill" id="weekPill">Week 1 Assignment · 50 Questions</div>
+
+    <label class="field-label" for="studentName">What is your full name?</label>
+    <input type="text" id="studentName" placeholder="e.g. Chidinma Okafor" autocomplete="off">
+    <p class="hint" id="nameHint">Please type your first and last name to begin.</p>
+
+    <button class="btn btn-primary" id="startBtn" disabled>Start Quiz 🚀</button>
+  </div>
+</section>
+
+<!-- ===================== SCREEN 2: QUIZ ===================== -->
+<section id="screen-quiz" class="screen">
+  <div class="quiz-wrap">
+    <div class="topbar">
+      <div class="brand-mini"><span class="dot">🍬</span> Sweet Hope School</div>
+      <div class="student-chip" id="studentChip">Hi, Student!</div>
+    </div>
+    <div class="topbar">
+      <div class="score-badge">⭐ <span id="liveScore">0</span>/<span id="liveAnswered">0</span> correct</div>
+      <div class="score-badge">📘 Q<span id="qIndexLabel">1</span> of <span id="qTotalLabel">50</span></div>
+    </div>
+
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+    <div class="q-card">
+      <div class="q-meta">
+        <span class="q-number">Question <span id="qNumber">1</span></span>
+        <span class="topic-tag" id="topicTag">Binary Numbers</span>
+      </div>
+      <p class="q-text" id="qText">Loading question...</p>
+      <div class="options" id="optionsWrap"></div>
+      <div class="feedback" id="feedbackBox">
+        <span class="fb-title" id="fbTitle"></span>
+        <span id="fbBody"></span>
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-nav-prev" id="prevBtn">⬅ Previous</button>
+      <button class="btn btn-nav-next" id="nextBtn" disabled>Next ➡</button>
+    </div>
+    <footer class="credit">Answer the question to unlock the Next button 🔓</footer>
+  </div>
+</section>
+
+<!-- ===================== SCREEN 3: RESULTS ===================== -->
+<section id="screen-result" class="screen">
+  <div class="card result-card">
+    <div class="trophy">🏆</div>
+    <h2 class="result-name" id="resultName">Well done, Student!</h2>
+    <p class="result-sub">Here is how you performed this week</p>
+
+    <div class="score-circle" id="scoreCircle" style="--pct:0">
+      <span class="pct" id="resultPct">0%</span>
+      <span class="frac" id="resultFrac">0 / 50</span>
+    </div>
+
+    <div class="result-message" id="resultMessage">Great effort!</div>
+
+    <div class="result-actions">
+      <button class="btn btn-email" id="emailBtn">📧 Send My Result to Teacher</button>
+      <button class="btn btn-restart" id="restartBtn">🔁 Restart Quiz</button>
+    </div>
+  </div>
+</section>
+
+<script>
+/* =========================================================================
+   CONFIG — EDIT THIS SECTION EACH WEEK
+   ========================================================================= */
+const TEACHER_EMAIL = "PUT_TEACHER_EMAIL_HERE@example.com"; // <-- replace with your real email
+const WEEK_LABEL = "Week 1 Assignment · 50 Questions";      // <-- change label each week
+
+/* =========================================================================
+   QUESTION DATABASE
+   Format: { topic, q, options:[4 strings], correct: index(0-3), working }
+   To add a new week: replace/extend this array. Keep the same shape.
+   ========================================================================= */
+const QUESTIONS = [
+
+// ---------- BASE 2 (BINARY) TO BASE 10 (DENARY) ----------
+{topic:"Binary to Denary", q:"Convert the binary number 101 to denary.", options:["3","4","5","6"], correct:2,
+ working:"101 = (1×4)+(0×2)+(1×1) = 4+0+1 = 5."},
+{topic:"Binary to Denary", q:"Convert the binary number 1010 to denary.", options:["8","10","12","9"], correct:1,
+ working:"1010 = (1×8)+(0×4)+(1×2)+(0×1) = 8+0+2+0 = 10."},
+{topic:"Binary to Denary", q:"Convert the binary number 1111 to denary.", options:["14","16","15","13"], correct:2,
+ working:"1111 = (1×8)+(1×4)+(1×2)+(1×1) = 8+4+2+1 = 15."},
+{topic:"Binary to Denary", q:"Convert the binary number 10001 to denary.", options:["16","18","17","19"], correct:2,
+ working:"10001 = (1×16)+(0×8)+(0×4)+(0×2)+(1×1) = 16+0+0+0+1 = 17."},
+{topic:"Binary to Denary", q:"Convert the binary number 11100 to denary.", options:["28","26","24","30"], correct:0,
+ working:"11100 = (1×16)+(1×8)+(1×4)+(0×2)+(0×1) = 16+8+4+0+0 = 28."},
+{topic:"Binary to Denary", q:"Convert the binary number 100000 to denary.", options:["16","32","64","30"], correct:1,
+ working:"100000 has a 1 only in the 32's place, so 100000 = 32."},
+{topic:"Binary to Denary", q:"Convert the binary number 110110 to denary.", options:["52","54","56","58"], correct:1,
+ working:"110110 = (1×32)+(1×16)+(0×8)+(1×4)+(1×2)+(0×1) = 32+16+0+4+2+0 = 54."},
+{topic:"Binary to Denary", q:"Convert the binary number 111111 to denary.", options:["61","62","63","64"], correct:2,
+ working:"111111 = 32+16+8+4+2+1 = 63."},
+
+// ---------- BASE 10 (DENARY) TO BASE 2 (BINARY) ----------
+{topic:"Denary to Binary", q:"Convert 5 to binary.", options:["101","110","111","100"], correct:0,
+ working:"5 ÷ 2 = 2 remainder 1, 2 ÷ 2 = 1 remainder 0, 1 ÷ 2 = 0 remainder 1. Reading the remainders bottom to top gives 101."},
+{topic:"Denary to Binary", q:"Convert 9 to binary.", options:["1010","1100","1001","1011"], correct:2,
+ working:"9 ÷ 2 = 4 r1, 4 ÷ 2 = 2 r0, 2 ÷ 2 = 1 r0, 1 ÷ 2 = 0 r1. Reading bottom to top gives 1001."},
+{topic:"Denary to Binary", q:"Convert 12 to binary.", options:["1100","1010","1001","1110"], correct:0,
+ working:"12 ÷ 2 = 6 r0, 6 ÷ 2 = 3 r0, 3 ÷ 2 = 1 r1, 1 ÷ 2 = 0 r1. Reading bottom to top gives 1100."},
+{topic:"Denary to Binary", q:"Convert 20 to binary.", options:["10010","10100","11000","10001"], correct:1,
+ working:"20 ÷ 2 = 10 r0, 10 ÷ 2 = 5 r0, 5 ÷ 2 = 2 r1, 2 ÷ 2 = 1 r0, 1 ÷ 2 = 0 r1. Reading bottom to top gives 10100."},
+{topic:"Denary to Binary", q:"Convert 27 to binary.", options:["11001","10111","11011","11101"], correct:2,
+ working:"27 ÷ 2 = 13 r1, 13 ÷ 2 = 6 r1, 6 ÷ 2 = 3 r0, 3 ÷ 2 = 1 r1, 1 ÷ 2 = 0 r1. Reading bottom to top gives 11011."},
+{topic:"Denary to Binary", q:"Convert 14 to binary.", options:["1101","1110","1100","1111"], correct:1,
+ working:"14 ÷ 2 = 7 r0, 7 ÷ 2 = 3 r1, 3 ÷ 2 = 1 r1, 1 ÷ 2 = 0 r1. Reading bottom to top gives 1110."},
+{topic:"Denary to Binary", q:"Convert 31 to binary.", options:["11111","11101","11110","10111"], correct:0,
+ working:"31 ÷ 2 = 15 r1, 15 ÷ 2 = 7 r1, 7 ÷ 2 = 3 r1, 3 ÷ 2 = 1 r1, 1 ÷ 2 = 0 r1. Reading bottom to top gives 11111."},
+{topic:"Denary to Binary", q:"Convert 45 to binary.", options:["101101","101110","100101","110101"], correct:0,
+ working:"45 ÷ 2 = 22 r1, 22 ÷ 2 = 11 r0, 11 ÷ 2 = 5 r1, 5 ÷ 2 = 2 r1, 2 ÷ 2 = 1 r0, 1 ÷ 2 = 0 r1. Reading bottom to top gives 101101."},
+
+// ---------- BASE 10 (DENARY) TO OTHER BASES ----------
+{topic:"Denary to Other Base", q:"Convert 20 to base 3.", options:["202","212","220","201"], correct:0,
+ working:"20 ÷ 3 = 6 r2, 6 ÷ 3 = 2 r0, 2 ÷ 3 = 0 r2. Reading bottom to top gives 202. Check: (2×9)+(0×3)+(2×1)=20."},
+{topic:"Denary to Other Base", q:"Convert 30 to base 5.", options:["100","110","120","101"], correct:1,
+ working:"30 ÷ 5 = 6 r0, 6 ÷ 5 = 1 r1, 1 ÷ 5 = 0 r1. Reading bottom to top gives 110. Check: (1×25)+(1×5)+(0×1)=30."},
+{topic:"Denary to Other Base", q:"Convert 100 to base 8.", options:["134","144","154","124"], correct:1,
+ working:"100 ÷ 8 = 12 r4, 12 ÷ 8 = 1 r4, 1 ÷ 8 = 0 r1. Reading bottom to top gives 144. Check: (1×64)+(4×8)+(4×1)=100."},
+{topic:"Denary to Other Base", q:"Convert 50 to base 4.", options:["302","312","320","310"], correct:0,
+ working:"50 ÷ 4 = 12 r2, 12 ÷ 4 = 3 r0, 3 ÷ 4 = 0 r3. Reading bottom to top gives 302. Check: (3×16)+(0×4)+(2×1)=50."},
+{topic:"Denary to Other Base", q:"Convert 255 to base 16 (hexadecimal).", options:["EE","FE","EF","FF"], correct:3,
+ working:"255 ÷ 16 = 15 r15, 15 ÷ 16 = 0 r15. In hex, 15 is written as F, so reading bottom to top gives FF. Check: (15×16)+(15×1)=255."},
+{topic:"Denary to Other Base", q:"Convert 45 to base 6.", options:["113","123","103","133"], correct:0,
+ working:"45 ÷ 6 = 7 r3, 7 ÷ 6 = 1 r1, 1 ÷ 6 = 0 r1. Reading bottom to top gives 113. Check: (1×36)+(1×6)+(3×1)=45."},
+{topic:"Denary to Other Base", q:"Convert 26 to base 16 (hexadecimal).", options:["1A","2A","1B","A1"], correct:0,
+ working:"26 ÷ 16 = 1 r10, 1 ÷ 16 = 0 r1. In hex, 10 is written as A, so reading bottom to top gives 1A. Check: (1×16)+(10×1)=26."},
+{topic:"Denary to Other Base", q:"Convert 7 to base 3.", options:["12","21","20","22"], correct:1,
+ working:"7 ÷ 3 = 2 r1, 2 ÷ 3 = 0 r2. Reading bottom to top gives 21. Check: (2×3)+(1×1)=7."},
+
+// ---------- OTHER BASES TO BASE 10 (DENARY) ----------
+{topic:"Other Base to Denary", q:"Convert 202 (base 3) to denary.", options:["18","20","22","24"], correct:1,
+ working:"202 in base 3 = (2×9)+(0×3)+(2×1) = 18+0+2 = 20."},
+{topic:"Other Base to Denary", q:"Convert 110 (base 5) to denary.", options:["28","29","30","31"], correct:2,
+ working:"110 in base 5 = (1×25)+(1×5)+(0×1) = 25+5+0 = 30."},
+{topic:"Other Base to Denary", q:"Convert 144 (base 8) to denary.", options:["96","98","100","102"], correct:2,
+ working:"144 in base 8 = (1×64)+(4×8)+(4×1) = 64+32+4 = 100."},
+{topic:"Other Base to Denary", q:"Convert 302 (base 4) to denary.", options:["46","48","50","52"], correct:2,
+ working:"302 in base 4 = (3×16)+(0×4)+(2×1) = 48+0+2 = 50."},
+{topic:"Other Base to Denary", q:"Convert FF (base 16) to denary.", options:["225","240","250","255"], correct:3,
+ working:"FF in hexadecimal has F=15 in each place, so FF = (15×16)+(15×1) = 240+15 = 255."},
+{topic:"Other Base to Denary", q:"Convert 113 (base 6) to denary.", options:["41","43","45","47"], correct:2,
+ working:"113 in base 6 = (1×36)+(1×6)+(3×1) = 36+6+3 = 45."},
+{topic:"Other Base to Denary", q:"Convert 1A (base 16) to denary.", options:["24","25","26","27"], correct:2,
+ working:"In hex, A=10, so 1A = (1×16)+(10×1) = 16+10 = 26."},
+{topic:"Other Base to Denary", q:"Convert 21 (base 3) to denary.", options:["5","6","7","8"], correct:2,
+ working:"21 in base 3 = (2×3)+(1×1) = 6+1 = 7."},
+
+// ---------- BINARY WITH A DECIMAL POINT TO DENARY ----------
+{topic:"Binary Fractions to Denary", q:"Convert the binary number 101.1 to denary.", options:["5.1","5.25","5.5","5.75"], correct:2,
+ working:"The whole part 101 = 5. The fractional part .1 = 1×(1/2) = 0.5. Adding gives 5 + 0.5 = 5.5."},
+{topic:"Binary Fractions to Denary", q:"Convert the binary number 110.01 to denary.", options:["6.1","6.25","6.5","6.75"], correct:1,
+ working:"The whole part 110 = 6. The fractional part .01 = (0×1/2)+(1×1/4) = 0.25. Adding gives 6 + 0.25 = 6.25."},
+{topic:"Binary Fractions to Denary", q:"Convert the binary number 11.11 to denary.", options:["3.25","3.5","3.75","3.9"], correct:2,
+ working:"The whole part 11 = 3. The fractional part .11 = (1×1/2)+(1×1/4) = 0.5+0.25 = 0.75. Adding gives 3 + 0.75 = 3.75."},
+{topic:"Binary Fractions to Denary", q:"Convert the binary number 1.101 to denary.", options:["1.5","1.6","1.625","1.75"], correct:2,
+ working:"The whole part 1 = 1. The fractional part .101 = (1×1/2)+(0×1/4)+(1×1/8) = 0.5+0+0.125 = 0.625. Adding gives 1 + 0.625 = 1.625."},
+{topic:"Binary Fractions to Denary", q:"Convert the binary number 100.11 to denary.", options:["4.25","4.5","4.75","4.9"], correct:2,
+ working:"The whole part 100 = 4. The fractional part .11 = (1×1/2)+(1×1/4) = 0.75. Adding gives 4 + 0.75 = 4.75."},
+{topic:"Binary Fractions to Denary", q:"Convert the binary number 10.001 to denary.", options:["2.1","2.125","2.25","2.5"], correct:1,
+ working:"The whole part 10 = 2. The fractional part .001 = (0×1/2)+(0×1/4)+(1×1/8) = 0.125. Adding gives 2 + 0.125 = 2.125."},
+{topic:"Binary Fractions to Denary", q:"What is the denary value of the first digit after the binary point (the 'halves' place)?", options:["1/2","1/4","1/8","2"], correct:0,
+ working:"After the binary point, place values are fractions of powers of 2: the first place is 1/2, the second is 1/4, the third is 1/8, and so on."},
+{topic:"Binary Fractions to Denary", q:"Convert the binary number 0.011 to denary.", options:["0.25","0.375","0.5","0.625"], correct:1,
+ working:"0.011 = (0×1/2)+(1×1/4)+(1×1/8) = 0+0.25+0.125 = 0.375."}
+];
+/* =========================================================================
+   STATE
+   ========================================================================= */
+let studentName = "";
+let currentIndex = 0;
+const answers = new Array(QUESTIONS.length).fill(null); // stores selected option index or null
+
+/* =========================================================================
+   ELEMENT REFERENCES
+   ========================================================================= */
+const screens = {
+  welcome: document.getElementById('screen-welcome'),
+  quiz: document.getElementById('screen-quiz'),
+  result: document.getElementById('screen-result')
+};
+const nameInput = document.getElementById('studentName');
+const startBtn = document.getElementById('startBtn');
+const nameHint = document.getElementById('nameHint');
+const weekPill = document.getElementById('weekPill');
+
+const studentChip = document.getElementById('studentChip');
+const liveScoreEl = document.getElementById('liveScore');
+const liveAnsweredEl = document.getElementById('liveAnswered');
+const qIndexLabel = document.getElementById('qIndexLabel');
+const qTotalLabel = document.getElementById('qTotalLabel');
+const progressFill = document.getElementById('progressFill');
+
+const qNumber = document.getElementById('qNumber');
+const topicTag = document.getElementById('topicTag');
+const qText = document.getElementById('qText');
+const optionsWrap = document.getElementById('optionsWrap');
+const feedbackBox = document.getElementById('feedbackBox');
+const fbTitle = document.getElementById('fbTitle');
+const fbBody = document.getElementById('fbBody');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+
+const resultName = document.getElementById('resultName');
+const scoreCircle = document.getElementById('scoreCircle');
+const resultPct = document.getElementById('resultPct');
+const resultFrac = document.getElementById('resultFrac');
+const resultMessage = document.getElementById('resultMessage');
+const emailBtn = document.getElementById('emailBtn');
+const restartBtn = document.getElementById('restartBtn');
+
+const LETTERS = ["A","B","C","D"];
+
+/* =========================================================================
+   INIT
+   ========================================================================= */
+weekPill.textContent = WEEK_LABEL;
+qTotalLabel.textContent = QUESTIONS.length;
+
+function showScreen(name){
+  Object.values(screens).forEach(s => s.classList.remove('active'));
+  screens[name].classList.add('active');
+  window.scrollTo({top:0, behavior:'instant'});
+}
+
+/* ---------- Name validation ---------- */
+function validateName(){
+  const val = nameInput.value.trim();
+  const words = val.split(/\s+/).filter(Boolean);
+  if(words.length >= 2){
+    startBtn.disabled = false;
+    nameHint.textContent = "Looks good! Tap Start Quiz when ready.";
+    nameHint.classList.remove('error');
+  } else {
+    startBtn.disabled = true;
+    nameHint.textContent = val.length ? "Please enter your full name (first and last name)." : "Please type your first and last name to begin.";
+    nameHint.classList.add('error');
+  }
+}
+nameInput.addEventListener('input', validateName);
+
+startBtn.addEventListener('click', () => {
+  studentName = nameInput.value.trim().replace(/\s+/g," ");
+  studentChip.textContent = "Hi, " + studentName.split(" ")[0] + "!";
+  currentIndex = 0;
+  showScreen('quiz');
+  renderQuestion();
+});
+
+/* ---------- Rendering a question ---------- */
+function renderQuestion(){
+  const data = QUESTIONS[currentIndex];
+  qNumber.textContent = currentIndex + 1;
+  qIndexLabel.textContent = currentIndex + 1;
+  topicTag.textContent = data.topic;
+  qText.textContent = data.q;
+
+  progressFill.style.width = (((currentIndex+1)/QUESTIONS.length)*100) + "%";
+
+  optionsWrap.innerHTML = "";
+  const chosen = answers[currentIndex];
+
+  data.options.forEach((optText, idx) => {
+    const btn = document.createElement('button');
+    btn.className = "opt";
+    btn.innerHTML = '<span class="opt-letter">' + LETTERS[idx] + '</span><span>' + optText + '</span>';
+    btn.disabled = chosen !== null;
+
+    if(chosen !== null){
+      if(idx === data.correct) btn.classList.add('correct');
+      if(idx === chosen && chosen !== data.correct) btn.classList.add('wrong');
+    }
+
+    btn.addEventListener('click', () => selectOption(idx));
+    optionsWrap.appendChild(btn);
+  });
+
+  if(chosen !== null){
+    showFeedback(data, chosen);
+    nextBtn.disabled = false;
+  } else {
+    feedbackBox.classList.remove('show','good','bad');
+  }
+
+  prevBtn.disabled = currentIndex === 0;
+  nextBtn.textContent = currentIndex === QUESTIONS.length - 1 ? "Finish Quiz 🏁" : "Next ➡";
+  nextBtn.classList.toggle('finish', currentIndex === QUESTIONS.length - 1);
+  if(chosen === null) nextBtn.disabled = true;
+
+  updateLiveScore();
+}
+
+function selectOption(idx){
+  if(answers[currentIndex] !== null) return; // already answered, locked
+  answers[currentIndex] = idx;
+  renderQuestion();
+}
+
+function showFeedback(data, chosen){
+  const isCorrect = chosen === data.correct;
+  feedbackBox.classList.add('show');
+  feedbackBox.classList.toggle('good', isCorrect);
+  feedbackBox.classList.toggle('bad', !isCorrect);
+  fbTitle.textContent = isCorrect ? "🎉 Correct! Well done!" : "❌ Not quite — here's how to solve it:";
+  fbBody.textContent = data.working;
+}
+
+function updateLiveScore(){
+  let correctCount = 0, answeredCount = 0;
+  answers.forEach((a,i) => {
+    if(a !== null){
+      answeredCount++;
+      if(a === QUESTIONS[i].correct) correctCount++;
+    }
+  });
+  liveScoreEl.textContent = correctCount;
+  liveAnsweredEl.textContent = answeredCount;
+}
+
+/* ---------- Navigation ---------- */
+prevBtn.addEventListener('click', () => {
+  if(currentIndex > 0){ currentIndex--; renderQuestion(); }
+});
+nextBtn.addEventListener('click', () => {
+  if(currentIndex < QUESTIONS.length - 1){
+    currentIndex++;
+    renderQuestion();
+  } else {
+    finishQuiz();
+  }
+});
+
+/* ---------- Results ---------- */
+function finishQuiz(){
+  let correctCount = 0;
+  answers.forEach((a,i) => { if(a === QUESTIONS[i].correct) correctCount++; });
+  const total = QUESTIONS.length;
+  const pct = Math.round((correctCount/total)*100);
+
+  resultName.textContent = "Well done, " + studentName + "!";
+  resultPct.textContent = pct + "%";
+  resultFrac.textContent = correctCount + " / " + total;
+  scoreCircle.style.setProperty('--pct', pct);
+
+  if(pct >= 80){
+    resultMessage.className = "result-message msg-great";
+    resultMessage.textContent = "Excellent work — you are a superstar! 🌟";
+  } else if(pct >= 50){
+    resultMessage.className = "result-message msg-good";
+    resultMessage.textContent = "Good job! Keep practicing to get even better. 💪";
+  } else {
+    resultMessage.className = "result-message msg-tryagain";
+    resultMessage.textContent = "Keep trying — practice makes perfect! 📚";
+  }
+
+  showScreen('result');
+  launchConfetti();
+}
+
+emailBtn.addEventListener('click', () => {
+  let correctCount = 0;
+  answers.forEach((a,i) => { if(a === QUESTIONS[i].correct) correctCount++; });
+  const total = QUESTIONS.length;
+  const pct = Math.round((correctCount/total)*100);
+
+  const subject = "Sweet Hope School - " + studentName + "'s Result";
+  const body =
+    "Sweet Hope School - JSS3 Mathematics\n" +
+    WEEK_LABEL + "\n\n" +
+    "Student Name: " + studentName + "\n" +
+    "Score: " + correctCount + " / " + total + "\n" +
+    "Percentage: " + pct + "%";
+
+  const mailtoLink = "mailto:" + encodeURIComponent(TEACHER_EMAIL) +
+    "?subject=" + encodeURIComponent(subject) +
+    "&body=" + encodeURIComponent(body);
+
+  window.location.href = mailtoLink;
+});
+
+restartBtn.addEventListener('click', () => {
+  answers.fill(null);
+  currentIndex = 0;
+  nameInput.value = "";
+  validateName();
+  showScreen('welcome');
+});
+
+/* ---------- Simple confetti celebration ---------- */
+function launchConfetti(){
+  const colors = ['#FFC93C','#4EA5D9','#FF6F91','#3FAE79','#8C6FE0'];
+  for(let i=0;i<40;i++){
+    const piece = document.createElement('div');
+    piece.className = 'confetti';
+    const size = 6 + Math.random()*6;
+    piece.style.width = size+"px";
+    piece.style.height = (size*1.4)+"px";
+    piece.style.left = Math.random()*100+"vw";
+    piece.style.background = colors[Math.floor(Math.random()*colors.length)];
+    piece.style.animationDuration = (2.2 + Math.random()*1.6)+"s";
+    piece.style.opacity = 0.9;
+    document.body.appendChild(piece);
+    setTimeout(()=>piece.remove(), 4200);
+  }
+}
+
+validateName();
+</script>
+</body>
+</html>
